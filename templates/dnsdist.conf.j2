@@ -38,6 +38,9 @@ webserver("{{ dnsdist_webserver_address }}", "{{ dnsdist_webserver_password }}")
 {% else %}
 {# dnsdist 1.5x or newer: #}
 webserver("{{ dnsdist_webserver_address }}")
+
+{# dnsdist 1.5x or 1.6: #}
+{% if _dnsdist_installed_version is defined and _dnsdist_installed_version is version('1.7', operator='lt') %}
 {% if dnsdist_webserver_apikey|length>0 and dnsdist_webserver_acl|length>0 %}
 setWebserverConfig({password="{{ dnsdist_webserver_password }}", apiKey="{{ dnsdist_webserver_apikey }}", acl="{{ dnsdist_webserver_acl }}"})
 {% elif dnsdist_webserver_apikey|length>0 %}
@@ -45,7 +48,16 @@ setWebserverConfig({password="{{ dnsdist_webserver_password }}", apiKey="{{ dnsd
 {% else %}
 setWebserverConfig({password="{{ dnsdist_webserver_password }}"})
 {% endif %}
-
+{# dnsdist 1.7x or newer: #}
+{% else %}
+{% if dnsdist_webserver_apikey|length>0 and dnsdist_webserver_acl|length>0 %}
+setWebserverConfig({hashPassword="{{ dnsdist_webserver_password }}", apiKey=hashPassword("{{ dnsdist_webserver_apikey }}"), acl="{{ dnsdist_webserver_acl }}"})
+{% elif dnsdist_webserver_apikey|length>0 %}
+setWebserverConfig({hashPassword="{{ dnsdist_webserver_password }}", apiKey=hashPassword("{{ dnsdist_webserver_apikey }}")})
+{% else %}
+setWebserverConfig({hashPassword="{{ dnsdist_webserver_password }}"})
+{% endif %}
+{% endif %}
 {% endif %}
 {% endif %}
 
